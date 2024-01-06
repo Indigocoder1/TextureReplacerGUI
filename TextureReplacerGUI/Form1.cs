@@ -41,21 +41,6 @@ namespace TextureReplacerGUI
 
             //DataLoader.LoadBundlesFolder(assetFolderPath, MANAGED_FOLDER_PATH);
             DataLoader.LoadBundleFile(Path.Combine(assetFolderPath, "aramidfibers.prefab_038a9d818af3f295e9592596c08a081d.bundle"), MANAGED_FOLDER_PATH);
-
-            //Get the mesh with the aramid fibers classID
-            MeshToOpenGL mesh = DataLoader.meshInfos.FirstOrDefault(i => i.Key == "2c4a802e-a6d4-4280-a803-02fc7555caf1").Value;
-
-            Console.WriteLine($"Indices length = {mesh.Indices.Length}");
-            Console.WriteLine($"Vertex length = {mesh.Vertices.Length}");
-
-            string vertList = "";
-            for (int i = 0; i < mesh.Vertices.Length; i += 3)
-            {
-                //string vertexNum = i > mesh.Vertices.Length - 1 ? "" : $"{mesh.Vertices[i]} (Index {i})";
-                vertList += $"Vertex at index {i} is {mesh.Vertices[i]}\n";
-            }
-
-            File.WriteAllText("C:\\Users\\caleb\\Downloads\\indexInfo.txt", vertList);
         }
 
         private bool TryRetrieveClassIDs()
@@ -113,24 +98,17 @@ namespace TextureReplacerGUI
             GL.Rotate(theta, 1f, 0, 0);
             GL.Rotate(theta, 1f, 0, 1f);
 
-            GL.Begin(PrimitiveType.Triangles);
+            GL.Begin(PrimitiveType.TriangleStrip);
 
             //Get the mesh with the aramid fibers classID
             MeshToOpenGL mesh = DataLoader.meshInfos.FirstOrDefault(i => i.Key == "2c4a802e-a6d4-4280-a803-02fc7555caf1").Value;
-            Vector3[] vertices = new Vector3[mesh.Vertices.Length / 3];
-            for (int i = 0; i < mesh.Vertices.Length / 3; i += 3)
-            {
-                float x = mesh.Vertices[i];
-                float y = mesh.Vertices[i + 1];
-                float z = mesh.Vertices[i + 2];
-                vertices[i] = new Vector3(x, y, z);
-            }
 
-            for (int i = 0; i < mesh.Indices.Length; i++)
+            int vertexCount = mesh.Vertices.Length / 3;
+            int skip = mesh.Normals.Length / vertexCount;
+            for (int i = 0; i < vertexCount; i++)
             {
-                //int originalIndex = i == 0 ? 0 : mesh.Indices[i] + 2;
-                //Console.WriteLine($"Current index is {i} | Indice at i is {mesh.Indices[i]} | Vertex at mesh.Indices[i] is {mesh.Vertices[originalIndex]}");
-                GL.Vertex3(vertices[mesh.Indices[i]]);
+                //GL.Normal3(new Vector3(-mesh.Normals[i * skip], mesh.Normals[i * skip + 1], mesh.Normals[i * skip + 2]));
+                GL.Vertex3(mesh.Vertices[i * 3], mesh.Vertices[i * 3 + 1], mesh.Vertices[i * 3 + 2]);
             }
 
             GL.End();
@@ -141,6 +119,8 @@ namespace TextureReplacerGUI
         {
             theta  = (theta + 1) % 360;
             glControl1.Invalidate();
+
+            Console.WriteLine(classIDDropdown.PointToClient(new System.Drawing.Point(Cursor.Position.X, Cursor.Position.Y)));
         }
 
         #region OnChange Verifications
@@ -163,6 +143,12 @@ namespace TextureReplacerGUI
             variationChanceBox.Enabled = variationToggle.Checked;
         }
         #endregion
+
+        private void classIDDropdown_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Console.WriteLine(classIDDropdown.SelectedItem);
+            Console.WriteLine(classIDs.ElementAt(classIDDropdown.SelectedIndex).Key);
+        }
     }
 
     public static class IntExtensions

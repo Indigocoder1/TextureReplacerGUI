@@ -58,6 +58,7 @@
             this.classIDDropdown.Name = "classIDDropdown";
             this.classIDDropdown.Size = new System.Drawing.Size(512, 24);
             this.classIDDropdown.TabIndex = 0;
+            this.classIDDropdown.SelectedIndexChanged += new System.EventHandler(this.classIDDropdown_SelectedIndexChanged);
             // 
             // configNameBox
             // 
