@@ -28,13 +28,14 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.classIDDropdown = new System.Windows.Forms.ComboBox();
             this.configNameBox = new System.Windows.Forms.TextBox();
             this.configNameLabel = new System.Windows.Forms.Label();
             this.materialIndexLabel = new System.Windows.Forms.Label();
             this.materialBox = new System.Windows.Forms.TextBox();
             this.textureFileNameLabel = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.texFileNameBox = new System.Windows.Forms.TextBox();
             this.classIDLabel = new System.Windows.Forms.Label();
             this.hierarchyPathLabel = new System.Windows.Forms.Label();
             this.hierarchyPathBox = new System.Windows.Forms.TextBox();
@@ -43,6 +44,9 @@
             this.variationToggle = new System.Windows.Forms.CheckBox();
             this.variationChanceBox = new System.Windows.Forms.TextBox();
             this.variationChanceLabel = new System.Windows.Forms.Label();
+            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.glControl1 = new OpenTK.GLControl();
+            this.tickTimer = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // classIDDropdown
@@ -97,12 +101,12 @@
             this.textureFileNameLabel.TabIndex = 6;
             this.textureFileNameLabel.Text = "Texture File Name";
             // 
-            // textBox1
+            // texFileNameBox
             // 
-            this.textBox1.Location = new System.Drawing.Point(24, 128);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(171, 22);
-            this.textBox1.TabIndex = 5;
+            this.texFileNameBox.Location = new System.Drawing.Point(24, 128);
+            this.texFileNameBox.Name = "texFileNameBox";
+            this.texFileNameBox.Size = new System.Drawing.Size(171, 22);
+            this.texFileNameBox.TabIndex = 5;
             // 
             // classIDLabel
             // 
@@ -173,11 +177,30 @@
             this.variationChanceLabel.TabIndex = 14;
             this.variationChanceLabel.Text = "Variation Chance (0 - 1)";
             // 
+            // glControl1
+            // 
+            this.glControl1.BackColor = System.Drawing.Color.Gray;
+            this.glControl1.Location = new System.Drawing.Point(601, 21);
+            this.glControl1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.glControl1.Name = "glControl1";
+            this.glControl1.Size = new System.Drawing.Size(640, 640);
+            this.glControl1.TabIndex = 15;
+            this.glControl1.VSync = false;
+            this.glControl1.Load += new System.EventHandler(this.glControl1_Load);
+            this.glControl1.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
+            // 
+            // tickTimer
+            // 
+            this.tickTimer.Enabled = true;
+            this.tickTimer.Interval = 17;
+            this.tickTimer.Tick += new System.EventHandler(this.tickTimer_Tick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(968, 660);
+            this.ClientSize = new System.Drawing.Size(1249, 670);
+            this.Controls.Add(this.glControl1);
             this.Controls.Add(this.variationChanceLabel);
             this.Controls.Add(this.variationChanceBox);
             this.Controls.Add(this.variationToggle);
@@ -187,7 +210,7 @@
             this.Controls.Add(this.hierarchyPathLabel);
             this.Controls.Add(this.classIDLabel);
             this.Controls.Add(this.textureFileNameLabel);
-            this.Controls.Add(this.textBox1);
+            this.Controls.Add(this.texFileNameBox);
             this.Controls.Add(this.materialIndexLabel);
             this.Controls.Add(this.materialBox);
             this.Controls.Add(this.configNameLabel);
@@ -209,7 +232,7 @@
         private System.Windows.Forms.Label materialIndexLabel;
         private System.Windows.Forms.TextBox materialBox;
         private System.Windows.Forms.Label textureFileNameLabel;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox texFileNameBox;
         private System.Windows.Forms.Label classIDLabel;
         private System.Windows.Forms.Label hierarchyPathLabel;
         private System.Windows.Forms.TextBox hierarchyPathBox;
@@ -218,6 +241,9 @@
         private System.Windows.Forms.CheckBox variationToggle;
         private System.Windows.Forms.TextBox variationChanceBox;
         private System.Windows.Forms.Label variationChanceLabel;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private OpenTK.GLControl glControl1;
+        private System.Windows.Forms.Timer tickTimer;
     }
 }
 

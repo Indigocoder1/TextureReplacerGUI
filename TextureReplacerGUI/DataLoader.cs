@@ -8,7 +8,7 @@ namespace TextureReplacerGUI
 {
     internal class DataLoader
     {
-        private static List<ClassIDMeshInfo> meshInfos = new List<ClassIDMeshInfo>();
+        public static List<ClassIDMeshInfo> meshInfos = new List<ClassIDMeshInfo>();
 
         public static void LoadAssetsFile(string filePath, string managedFolderPath)
         {
@@ -147,7 +147,7 @@ namespace TextureReplacerGUI
             return false;
         }
 
-        private struct ClassIDMeshInfo
+        public struct ClassIDMeshInfo
         {
             public string classID;
             public Mesh mesh;

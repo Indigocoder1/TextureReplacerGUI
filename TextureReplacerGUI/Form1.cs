@@ -1,18 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using Newtonsoft.Json;
-using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
+using OpenTK;
+using OpenTK.Graphics;
+using OpenTK.Graphics.OpenGL;
 
 namespace TextureReplacerGUI
 {
     public partial class Form1 : Form
     {
         private Dictionary<string, string> classIDs = new Dictionary<string, string>();
+
         private const string MANAGED_FOLDER_PATH = "D:\\Program Files (x86)\\Steam\\steamapps\\common\\Subnautica\\Subnautica_Data\\Managed";
+        private string assetFolderPath = "D:\\Program Files (x86)\\Steam\\steamapps" +
+            "\\common\\Subnautica\\Subnautica_Data\\StreamingAssets\\aa\\StandaloneWindows64";
+        private bool glControlLoaded;
+
+        private float theta;
 
         public Form1()
         {
@@ -21,7 +29,7 @@ namespace TextureReplacerGUI
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            if(!TryGetClassIDs())
+            if(!TryRetrieveClassIDs())
             {
                 return;
             }
@@ -30,14 +38,12 @@ namespace TextureReplacerGUI
 
             variationChanceBox.Enabled = variationToggle.Checked;
 
-            string assetFolderPath = "D:\\Program Files (x86)\\Steam\\steamapps\\common\\Subnautica\\Subnautica_Data\\StreamingAssets\\aa\\StandaloneWindows64";
-
-            DataLoader.LoadBundlesFolder(assetFolderPath, MANAGED_FOLDER_PATH);
-
-            //DataLoader.LoadBundleFile(assetPath, MANAGED_FOLDER_PATH);
+            //DataLoader.LoadBundlesFolder(assetFolderPath, MANAGED_FOLDER_PATH);
+            DataLoader.LoadBundleFile(Path.Combine(assetFolderPath, "aramidfibers.prefab_038a9d818af3f295e9592596c08a081d.bundle"), MANAGED_FOLDER_PATH);
+            Console.WriteLine(DataLoader.meshInfos[0].mesh.Indices);
         }
 
-        private bool TryGetClassIDs()
+        private bool TryRetrieveClassIDs()
         {
             WebClient client = new();
             try
@@ -85,5 +91,85 @@ namespace TextureReplacerGUI
         {
             variationChanceBox.Enabled = variationToggle.Checked;
         }
+
+        private void glControl1_Load(object sender, EventArgs e)
+        {
+            glControlLoaded = true;
+
+            GL.Viewport(0, 0, glControl1.ClientSize.Width, glControl1.ClientSize.Height);
+            GL.MatrixMode(MatrixMode.Projection);
+            GL.LoadIdentity();
+
+            float aspectRatio = (float)glControl1.ClientSize.Width / glControl1.ClientSize.Height;
+            Matrix4 frustumMatrix = Matrix4.CreatePerspectiveFieldOfView(60f.Deg2Rad(), aspectRatio, 1f, 100f);
+
+            GL.LoadMatrix(ref frustumMatrix);
+            GL.MatrixMode(MatrixMode.Modelview);
+            GL.Enable(EnableCap.DepthTest);
+        }
+
+        private void glControl1_Paint(object sender, PaintEventArgs e)
+        {
+            glControl1.MakeCurrent();
+
+            GL.LoadIdentity();
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+            GL.Translate(0, 0, -45f);
+            GL.Rotate(theta, 1f, 0, 0);
+            GL.Rotate(theta, 1f, 0, 1f);
+
+            GL.Begin(PrimitiveType.Quads);
+
+            GL.Color3(1.0, 1.0, 0.0);
+            GL.Vertex3(-10.0, 10.0, 10.0);
+            GL.Vertex3(-10.0, 10.0, -10.0);
+            GL.Vertex3(-10.0, -10.0, -10.0);
+            GL.Vertex3(-10.0, -10.0, 10.0);
+
+            GL.Color3(1.0, 0.0, 1.0);
+            GL.Vertex3(10.0, 10.0, 10.0);
+            GL.Vertex3(10.0, 10.0, -10.0);
+            GL.Vertex3(10.0, -10.0, -10.0);
+            GL.Vertex3(10.0, -10.0, 10.0);
+
+            GL.Color3(0.0, 1.0, 1.0);
+            GL.Vertex3(10.0, -10.0, 10.0);
+            GL.Vertex3(10.0, -10.0, -10.0);
+            GL.Vertex3(-10.0, -10.0, -10.0);
+            GL.Vertex3(-10.0, -10.0, 10.0);
+
+            GL.Color3(1.0, 0.0, 0.0);
+            GL.Vertex3(10.0, 10.0, 10.0);
+            GL.Vertex3(10.0, 10.0, -10.0);
+            GL.Vertex3(-10.0, 10.0, -10.0);
+            GL.Vertex3(-10.0, 10.0, 10.0);
+
+            GL.Color3(0.0, 1.0, 0.0);
+            GL.Vertex3(10.0, 10.0, -10.0);
+            GL.Vertex3(10.0, -10.0, -10.0);
+            GL.Vertex3(-10.0, -10.0, -10.0);
+            GL.Vertex3(-10.0, 10.0, -10.0);
+
+            GL.Color3(0.0, 0.0, 1.0);
+            GL.Vertex3(10.0, 10.0, 10.0);
+            GL.Vertex3(10.0, -10.0, 10.0);
+            GL.Vertex3(-10.0, -10.0, 10.0);
+            GL.Vertex3(-10.0, 10.0, 10.0);
+
+            GL.End();
+            glControl1.SwapBuffers();
+        }
+
+        private void tickTimer_Tick(object sender, EventArgs e)
+        {
+            theta  = (theta + 1) % 360;
+            glControl1.Invalidate();
+        }
+    }
+
+    public static class IntExtensions
+    {
+        public static float Deg2Rad(this float i) => (i * (float)Math.PI / 180f);
     }
 }
