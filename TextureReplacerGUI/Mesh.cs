@@ -95,7 +95,7 @@ public class Mesh
             vertices = baseField["m_VertexData.m_VertexCount"].AsUInt;
 
             // If vertex data size is 0, data is stored in a stream file.
-            if (baseField["m_VertexData.m_DataSize.Array"].IsDummy || baseField["m_VertexData.m_DataSize.Array"].AsByteArray.Length == 0)
+            if (baseField["m_VertexData.m_DataSize"].IsDummy || baseField["m_VertexData.m_DataSize"].AsByteArray.Length == 0)
             {
                 streamDataSize = baseField["m_StreamData.size"].AsUInt;
             }

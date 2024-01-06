@@ -3,12 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
+using UABEANext3.AssetHandlers.Mesh;
 
 namespace TextureReplacerGUI
 {
     internal class DataLoader
     {
-        public static List<ClassIDMeshInfo> meshInfos = new List<ClassIDMeshInfo>();
+        public static Dictionary<string, MeshToOpenGL> meshInfos = new();
 
         public static void LoadAssetsFile(string filePath, string managedFolderPath)
         {
@@ -82,9 +83,9 @@ namespace TextureReplacerGUI
 
             manager.LoadClassDatabaseFromPackage(aFile.Metadata.UnityVersion);
 
-            if(TryGetClassID(aFileInst, manager, out string classID) && TryGetMesh(aFileInst, manager, out Mesh mesh))
+            if(TryGetClassID(aFileInst, manager, out string classID) && TryGetMesh(aFileInst, manager, out MeshToOpenGL mesh))
             {
-                meshInfos.Add(new ClassIDMeshInfo(classID, mesh));
+                meshInfos.Add(classID, mesh);
             }
         }
 
@@ -123,8 +124,8 @@ namespace TextureReplacerGUI
             classID = null;
             return false;
         }
-
-        private static bool TryGetMesh(AssetsFileInstance aFileInstance, AssetsManager manager, out Mesh mesh)
+        
+        private static bool TryGetMesh(AssetsFileInstance aFileInstance, AssetsManager manager, out MeshToOpenGL mesh)
         {
             mesh = null;
             var aFile = aFileInstance.file;
@@ -135,7 +136,7 @@ namespace TextureReplacerGUI
 
                 try
                 {
-                    mesh = Mesh.Read(meshBase);
+                    mesh = new MeshToOpenGL(aFileInstance, meshBase);
                     return true;
                 }
                 catch(Exception e)
@@ -150,9 +151,9 @@ namespace TextureReplacerGUI
         public struct ClassIDMeshInfo
         {
             public string classID;
-            public Mesh mesh;
+            public MeshToOpenGL mesh;
 
-            public ClassIDMeshInfo(string classID, Mesh mesh)
+            public ClassIDMeshInfo(string classID, MeshToOpenGL mesh)
             {
                 this.classID = classID;
                 this.mesh = mesh;
