@@ -4,8 +4,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Reflection;
-using System.Runtime.Remoting.Messaging;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using OpenTK;
@@ -17,19 +15,16 @@ namespace TextureReplacerGUI
     public partial class Form1 : Form
     {
         private Dictionary<string, string> classIDs = new Dictionary<string, string>();
-
-        private const string MANAGED_FOLDER_PATH = "D:\\Program Files (x86)\\Steam\\steamapps\\common\\Subnautica\\Subnautica_Data\\Managed";
-        private string assetFolderPath = "D:\\Program Files (x86)\\Steam\\steamapps" +
-            "\\common\\Subnautica\\Subnautica_Data\\StreamingAssets\\aa\\StandaloneWindows64";
-        private bool glControlLoaded;
+        private bool meshesLoaded;
 
         private bool dragging;
         private Point previousMouseLocation;
 
         private const float CAM_SENSITIVITY = 1f;
-        private float xRot;
-        private float yRot;
-        private Vector3 objectRot = Vector3.Zero;
+        private float mouseX;
+        private float mouseY;
+
+        private MeshToOpenGL activeMesh;
 
         public Form1()
         {
@@ -46,9 +41,7 @@ namespace TextureReplacerGUI
             SetUpClassIDList();
 
             variationChanceBox.Enabled = variationToggle.Checked;
-
-            //DataLoader.LoadBundlesFolder(assetFolderPath, MANAGED_FOLDER_PATH);
-            DataLoader.LoadBundleFile(Path.Combine(assetFolderPath, "aramidfibers.prefab_038a9d818af3f295e9592596c08a081d.bundle"), MANAGED_FOLDER_PATH);
+            loadingLabel.Visible = false;
         }
 
         private bool TryRetrieveClassIDs()
@@ -81,7 +74,6 @@ namespace TextureReplacerGUI
 
         private void glControl1_Load(object sender, EventArgs e)
         {
-            glControlLoaded = true;
             glControl1.MouseDown += OnGLMouseDown;
             glControl1.MouseUp += OnGLMouseUp;
             glControl1.MouseMove += OnGLMouseMove;
@@ -102,29 +94,29 @@ namespace TextureReplacerGUI
 
         private void glControl1_Paint(object sender, PaintEventArgs e)
         {
+            if(activeMesh == null)
+            {
+                return;
+            }
+
             glControl1.MakeCurrent();
 
             GL.LoadIdentity();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             GL.Translate(new Vector3(0, 0, -2));
-
-            GL.Rotate(yRot, new Vector3(1, 0, 0));
-            GL.Rotate(xRot, new Vector3(0, 1, 0));
+            GL.Rotate(mouseX, new Vector3(0, 1, 0));
+            GL.Rotate(mouseY, new Vector3(1, 0, 0));
 
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             GL.Begin(PrimitiveType.TriangleStrip);
 
-            //Get the mesh with the aramid fibers classID
-            MeshToOpenGL mesh = DataLoader.meshInfos.FirstOrDefault(i => i.Key == "2c4a802e-a6d4-4280-a803-02fc7555caf1").Value;
             GL.Color3(0.48f, 0.5f, 0.59f);
 
-            int vertexCount = mesh.Vertices.Length / 3;
-            int skip = mesh.Normals.Length / vertexCount;
+            int vertexCount = activeMesh.Vertices.Length / 3;
             for (int i = 0; i < vertexCount; i++)
             {
-                //GL.Normal3(new Vector3(-mesh.Normals[i * skip], mesh.Normals[i * skip + 1], mesh.Normals[i * skip + 2]));
-                GL.Vertex3(mesh.Vertices[i * 3], mesh.Vertices[i * 3 + 1], mesh.Vertices[i * 3 + 2]);
+                GL.Vertex3(activeMesh.Vertices[i * 3], activeMesh.Vertices[i * 3 + 1], activeMesh.Vertices[i * 3 + 2]);
             }
 
             GL.End();
@@ -133,7 +125,42 @@ namespace TextureReplacerGUI
 
         private void tickTimer_Tick(object sender, EventArgs e)
         {
-            //Console.WriteLine(objRot.Xyz);
+            //glControl1.Invalidate();
+        }
+
+        private void OnGLMouseDown(object sender, MouseEventArgs e)
+        {
+            if(e.Button != MouseButtons.Left)
+            {
+                return;
+            }
+            
+            previousMouseLocation = e.Location;
+            dragging = true;
+        }
+
+        private void OnGLMouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left)
+            {
+                return;
+            }
+
+            dragging = false;
+        }
+
+        private void OnGLMouseMove(object sender, MouseEventArgs e)
+        {
+            if (!dragging)
+            {
+                return;
+            }
+
+            Point difference = e.Location - (Size)previousMouseLocation;
+            mouseX += difference.X * CAM_SENSITIVITY;
+            mouseY += difference.Y * CAM_SENSITIVITY;
+
+            previousMouseLocation = e.Location;
             glControl1.Invalidate();
         }
 
@@ -160,47 +187,25 @@ namespace TextureReplacerGUI
 
         private void classIDDropdown_SelectedIndexChanged(object sender, EventArgs e)
         {
-            Console.WriteLine(classIDDropdown.SelectedItem);
-            Console.WriteLine(classIDs.ElementAt(classIDDropdown.SelectedIndex).Key);
+            activeMesh = DataLoader.meshInfos[classIDs.ElementAt(classIDDropdown.SelectedIndex).Key];
         }
 
-        private void OnGLMouseDown(object sender, MouseEventArgs e)
+        private void loadFolderBtn_Click(object sender, EventArgs e)
         {
-            if(e.Button != MouseButtons.Left)
+            if(folderBrowserDialog1.ShowDialog() == DialogResult.OK)
             {
-                return;
-            }
+                loadingLabel.Visible = true;
 
-            previousMouseLocation = e.Location;
-            dragging = true;
+                string managedFolderPath = Path.Combine(folderBrowserDialog1.SelectedPath, "Managed");
+                string assetsPath = Path.Combine(folderBrowserDialog1.SelectedPath, "StreamingAssets/aa/StandaloneWindows64");
+
+                DataLoader.LoadBundlesFolder(assetsPath, managedFolderPath, OnFileLoadComplete, _ => meshesLoaded = true);
+            }
         }
 
-        private void OnGLMouseUp(object sender, MouseEventArgs e)
+        private void OnFileLoadComplete(object sender, DataLoader.OnFileLoaded_EventArgs e)
         {
-            if (e.Button != MouseButtons.Left)
-            {
-                return;
-            }
-
-            dragging = false;
-        }
-
-        private void OnGLMouseMove(object sender, MouseEventArgs e)
-        {
-            if (!dragging)
-            {
-                return;
-            }
-
-            Point difference = e.Location - (Size)previousMouseLocation;
-            xRot += difference.X * CAM_SENSITIVITY;
-            yRot += difference.Y * CAM_SENSITIVITY;
-            objectRot *= new Vector3(yRot, xRot, 0);
-
-            Console.WriteLine(new Vector2(xRot, yRot));
-
-            previousMouseLocation = e.Location;
-            //glControl1.Invalidate();
+            progressBar1.Value = (int)Math.Round(e.currentPercentage * 100, 0);
         }
     }
 

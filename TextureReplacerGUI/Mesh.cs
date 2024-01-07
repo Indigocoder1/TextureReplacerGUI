@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 
+[Obsolete("This is obsolete. Use MeshToOpenGL instead", true)]
 public class Mesh
 {
     public enum ChannelUsage

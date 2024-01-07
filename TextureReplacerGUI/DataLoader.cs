@@ -2,6 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using UABEANext3.AssetHandlers.Mesh;
 
@@ -46,7 +49,7 @@ namespace TextureReplacerGUI
             }
         }
 
-        public static void LoadBundlesFolder(string folderPath, string managedFolderPath)
+        public static async void LoadBundlesFolder(string folderPath, string managedFolderPath, EventHandler<OnFileLoaded_EventArgs> OnFileLoaded, Action OnLoadComplete)
         {
             if (!Directory.Exists(folderPath))
             {
@@ -65,12 +68,23 @@ namespace TextureReplacerGUI
                 }
 
                 Console.WriteLine($"Progress at {filesRead / (float)files.Length * 100}%");
-                LoadBundleFile(file, managedFolderPath);
+
+                ClassIDMeshInfo info = await LoadBundleFile(file, managedFolderPath);
+                if(string.IsNullOrEmpty(info.classID))
+                {
+                    continue;
+                }
+                
+                meshInfos.Add(info.classID, info.mesh);
+                OnFileLoaded?.Invoke(null, new OnFileLoaded_EventArgs(filesRead / (float)files.Length));
+
                 filesRead++;
             }
+
+            OnLoadComplete?.Invoke();
         }
 
-        public static void LoadBundleFile(string filePath, string managedFolderPath)
+        public static async Task<ClassIDMeshInfo> LoadBundleFile(string filePath, string managedFolderPath)
         {
             var manager = new AssetsManager();
             manager.LoadClassPackage("C:\\VisualStudioProjects\\TextureReplacerGUI\\lz4.tpk");
@@ -83,10 +97,21 @@ namespace TextureReplacerGUI
 
             manager.LoadClassDatabaseFromPackage(aFile.Metadata.UnityVersion);
 
-            if(TryGetClassID(aFileInst, manager, out string classID) && TryGetMesh(aFileInst, manager, out MeshToOpenGL mesh))
+            string classID = null;
+            bool hasClassID = await Task.Run(() => TryGetClassID(aFileInst, manager, out classID));
+            if(!hasClassID)
             {
-                meshInfos.Add(classID, mesh);
+                return ClassIDMeshInfo.Empty;
             }
+
+            MeshToOpenGL mesh = null;
+            bool hasMesh = await Task.Run(() => TryGetMesh(aFileInst, manager, out mesh));
+            if(!hasMesh)
+            {
+                return ClassIDMeshInfo.Empty;
+            }
+            
+            return new ClassIDMeshInfo(classID, mesh);
         }
 
         private static bool TryGetClassID(AssetsFileInstance aFileInstance, AssetsManager manager, out string classID)
@@ -157,6 +182,18 @@ namespace TextureReplacerGUI
             {
                 this.classID = classID;
                 this.mesh = mesh;
+            }
+
+            public static ClassIDMeshInfo Empty = new ClassIDMeshInfo(null, null);
+        }
+
+        public class OnFileLoaded_EventArgs : EventArgs
+        {
+            public float currentPercentage;
+
+            public OnFileLoaded_EventArgs(float currentPercentage)
+            {
+                this.currentPercentage = currentPercentage;
             }
         }
     }

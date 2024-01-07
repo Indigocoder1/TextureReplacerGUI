@@ -47,6 +47,10 @@
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.glControl1 = new OpenTK.GLControl();
             this.tickTimer = new System.Windows.Forms.Timer(this.components);
+            this.loadFolderBtn = new System.Windows.Forms.Button();
+            this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
+            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.loadingLabel = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // classIDDropdown
@@ -196,11 +200,42 @@
             this.tickTimer.Interval = 17;
             this.tickTimer.Tick += new System.EventHandler(this.tickTimer_Tick);
             // 
+            // loadFolderBtn
+            // 
+            this.loadFolderBtn.Location = new System.Drawing.Point(12, 559);
+            this.loadFolderBtn.Name = "loadFolderBtn";
+            this.loadFolderBtn.Size = new System.Drawing.Size(222, 55);
+            this.loadFolderBtn.TabIndex = 16;
+            this.loadFolderBtn.Text = "Load Assets";
+            this.loadFolderBtn.UseVisualStyleBackColor = true;
+            this.loadFolderBtn.Click += new System.EventHandler(this.loadFolderBtn_Click);
+            // 
+            // progressBar1
+            // 
+            this.progressBar1.Location = new System.Drawing.Point(12, 620);
+            this.progressBar1.Name = "progressBar1";
+            this.progressBar1.Size = new System.Drawing.Size(582, 38);
+            this.progressBar1.TabIndex = 17;
+            // 
+            // loadingLabel
+            // 
+            this.loadingLabel.AutoSize = true;
+            this.loadingLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F);
+            this.loadingLabel.Location = new System.Drawing.Point(240, 594);
+            this.loadingLabel.Name = "loadingLabel";
+            this.loadingLabel.Size = new System.Drawing.Size(275, 20);
+            this.loadingLabel.TabIndex = 18;
+            this.loadingLabel.Text = "Loading files... This will take a while";
+            this.loadingLabel.Visible = false;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1249, 670);
+            this.Controls.Add(this.loadingLabel);
+            this.Controls.Add(this.progressBar1);
+            this.Controls.Add(this.loadFolderBtn);
             this.Controls.Add(this.glControl1);
             this.Controls.Add(this.variationChanceLabel);
             this.Controls.Add(this.variationChanceBox);
@@ -245,6 +280,10 @@
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private OpenTK.GLControl glControl1;
         private System.Windows.Forms.Timer tickTimer;
+        private System.Windows.Forms.Button loadFolderBtn;
+        private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
+        private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.Label loadingLabel;
     }
 }
 

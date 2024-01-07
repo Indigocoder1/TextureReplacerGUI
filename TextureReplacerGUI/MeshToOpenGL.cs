@@ -395,7 +395,7 @@ namespace UABEANext3.AssetHandlers.Mesh
                         var src = 0;
                         for (var i = 0; i < count; i++, src += 2)
                         {
-                            items[i] = (float)UInt16BitsToHalf((ushort)(data[src] | (data[src + 1] << 8)));
+                            items[i] = data[src] | (data[src + 1] << 8);
                         }
                         return items;
                     }
