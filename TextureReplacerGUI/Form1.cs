@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Runtime.Remoting.Messaging;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using OpenTK;
@@ -21,7 +23,13 @@ namespace TextureReplacerGUI
             "\\common\\Subnautica\\Subnautica_Data\\StreamingAssets\\aa\\StandaloneWindows64";
         private bool glControlLoaded;
 
-        private float theta;
+        private bool dragging;
+        private Point previousMouseLocation;
+
+        private const float CAM_SENSITIVITY = 1f;
+        private float xRot;
+        private float yRot;
+        private Vector3 objectRot = Vector3.Zero;
 
         public Form1()
         {
@@ -74,15 +82,20 @@ namespace TextureReplacerGUI
         private void glControl1_Load(object sender, EventArgs e)
         {
             glControlLoaded = true;
+            glControl1.MouseDown += OnGLMouseDown;
+            glControl1.MouseUp += OnGLMouseUp;
+            glControl1.MouseMove += OnGLMouseMove;
+
+            GL.ClearColor(Color.CadetBlue);
 
             GL.Viewport(0, 0, glControl1.ClientSize.Width, glControl1.ClientSize.Height);
             GL.MatrixMode(MatrixMode.Projection);
             GL.LoadIdentity();
 
             float aspectRatio = (float)glControl1.ClientSize.Width / glControl1.ClientSize.Height;
-            Matrix4 frustumMatrix = Matrix4.CreatePerspectiveFieldOfView(60f.Deg2Rad(), aspectRatio, 1f, 100f);
+            Matrix4 viewMatrix = Matrix4.CreatePerspectiveFieldOfView(60f.Deg2Rad(), aspectRatio, 1f, 100f);
+            GL.LoadMatrix(ref viewMatrix);
 
-            GL.LoadMatrix(ref frustumMatrix);
             GL.MatrixMode(MatrixMode.Modelview);
             GL.Enable(EnableCap.DepthTest);
         }
@@ -94,14 +107,17 @@ namespace TextureReplacerGUI
             GL.LoadIdentity();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            GL.Translate(0, 0, -2f);
-            GL.Rotate(theta, 1f, 0, 0);
-            GL.Rotate(theta, 1f, 0, 1f);
+            GL.Translate(new Vector3(0, 0, -2));
 
+            GL.Rotate(yRot, new Vector3(1, 0, 0));
+            GL.Rotate(xRot, new Vector3(0, 1, 0));
+
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             GL.Begin(PrimitiveType.TriangleStrip);
 
             //Get the mesh with the aramid fibers classID
             MeshToOpenGL mesh = DataLoader.meshInfos.FirstOrDefault(i => i.Key == "2c4a802e-a6d4-4280-a803-02fc7555caf1").Value;
+            GL.Color3(0.48f, 0.5f, 0.59f);
 
             int vertexCount = mesh.Vertices.Length / 3;
             int skip = mesh.Normals.Length / vertexCount;
@@ -117,10 +133,8 @@ namespace TextureReplacerGUI
 
         private void tickTimer_Tick(object sender, EventArgs e)
         {
-            theta  = (theta + 1) % 360;
+            //Console.WriteLine(objRot.Xyz);
             glControl1.Invalidate();
-
-            Console.WriteLine(classIDDropdown.PointToClient(new System.Drawing.Point(Cursor.Position.X, Cursor.Position.Y)));
         }
 
         #region OnChange Verifications
@@ -149,10 +163,50 @@ namespace TextureReplacerGUI
             Console.WriteLine(classIDDropdown.SelectedItem);
             Console.WriteLine(classIDs.ElementAt(classIDDropdown.SelectedIndex).Key);
         }
+
+        private void OnGLMouseDown(object sender, MouseEventArgs e)
+        {
+            if(e.Button != MouseButtons.Left)
+            {
+                return;
+            }
+
+            previousMouseLocation = e.Location;
+            dragging = true;
+        }
+
+        private void OnGLMouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left)
+            {
+                return;
+            }
+
+            dragging = false;
+        }
+
+        private void OnGLMouseMove(object sender, MouseEventArgs e)
+        {
+            if (!dragging)
+            {
+                return;
+            }
+
+            Point difference = e.Location - (Size)previousMouseLocation;
+            xRot += difference.X * CAM_SENSITIVITY;
+            yRot += difference.Y * CAM_SENSITIVITY;
+            objectRot *= new Vector3(yRot, xRot, 0);
+
+            Console.WriteLine(new Vector2(xRot, yRot));
+
+            previousMouseLocation = e.Location;
+            //glControl1.Invalidate();
+        }
     }
 
-    public static class IntExtensions
+    public static class Extensions
     {
         public static float Deg2Rad(this float i) => (i * (float)Math.PI / 180f);
+        public static Vector2 ToVector2(this Point point) => (new Vector2(point.X, point.Y));
     }
 }
