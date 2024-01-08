@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.classIDDropdown = new System.Windows.Forms.ComboBox();
             this.configNameBox = new System.Windows.Forms.TextBox();
             this.configNameLabel = new System.Windows.Forms.Label();
@@ -46,11 +45,14 @@
             this.variationChanceLabel = new System.Windows.Forms.Label();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.glControl1 = new OpenTK.GLControl();
-            this.tickTimer = new System.Windows.Forms.Timer(this.components);
             this.loadFolderBtn = new System.Windows.Forms.Button();
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.loadingLabel = new System.Windows.Forms.Label();
+            this.previewLabel = new System.Windows.Forms.Label();
+            this.ExportCfgBtn = new System.Windows.Forms.Button();
+            this.SaveCfgBtn = new System.Windows.Forms.Button();
+            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.SuspendLayout();
             // 
             // classIDDropdown
@@ -194,17 +196,11 @@
             this.glControl1.Load += new System.EventHandler(this.glControl1_Load);
             this.glControl1.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
             // 
-            // tickTimer
-            // 
-            this.tickTimer.Enabled = true;
-            this.tickTimer.Interval = 17;
-            this.tickTimer.Tick += new System.EventHandler(this.tickTimer_Tick);
-            // 
             // loadFolderBtn
             // 
-            this.loadFolderBtn.Location = new System.Drawing.Point(12, 559);
+            this.loadFolderBtn.Location = new System.Drawing.Point(12, 548);
             this.loadFolderBtn.Name = "loadFolderBtn";
-            this.loadFolderBtn.Size = new System.Drawing.Size(222, 55);
+            this.loadFolderBtn.Size = new System.Drawing.Size(222, 40);
             this.loadFolderBtn.TabIndex = 16;
             this.loadFolderBtn.Text = "Load Assets";
             this.loadFolderBtn.UseVisualStyleBackColor = true;
@@ -220,19 +216,52 @@
             // loadingLabel
             // 
             this.loadingLabel.AutoSize = true;
-            this.loadingLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F);
-            this.loadingLabel.Location = new System.Drawing.Point(240, 594);
+            this.loadingLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 13F);
+            this.loadingLabel.Location = new System.Drawing.Point(7, 591);
             this.loadingLabel.Name = "loadingLabel";
-            this.loadingLabel.Size = new System.Drawing.Size(275, 20);
+            this.loadingLabel.Size = new System.Drawing.Size(450, 26);
             this.loadingLabel.TabIndex = 18;
-            this.loadingLabel.Text = "Loading files... This will take a while";
+            this.loadingLabel.Text = "Loading files... This will take a while (10.55%)";
             this.loadingLabel.Visible = false;
+            // 
+            // previewLabel
+            // 
+            this.previewLabel.AutoSize = true;
+            this.previewLabel.Location = new System.Drawing.Point(448, 199);
+            this.previewLabel.Name = "previewLabel";
+            this.previewLabel.Size = new System.Drawing.Size(88, 16);
+            this.previewLabel.TabIndex = 19;
+            this.previewLabel.Text = "Can\'t Preview";
+            this.previewLabel.Visible = false;
+            // 
+            // ExportCfgBtn
+            // 
+            this.ExportCfgBtn.Location = new System.Drawing.Point(12, 502);
+            this.ExportCfgBtn.Name = "ExportCfgBtn";
+            this.ExportCfgBtn.Size = new System.Drawing.Size(222, 40);
+            this.ExportCfgBtn.TabIndex = 20;
+            this.ExportCfgBtn.Text = "Export Config(s)";
+            this.ExportCfgBtn.UseVisualStyleBackColor = true;
+            this.ExportCfgBtn.Click += new System.EventHandler(this.ExportCfgBtn_Click);
+            // 
+            // SaveCfgBtn
+            // 
+            this.SaveCfgBtn.Location = new System.Drawing.Point(12, 456);
+            this.SaveCfgBtn.Name = "SaveCfgBtn";
+            this.SaveCfgBtn.Size = new System.Drawing.Size(222, 40);
+            this.SaveCfgBtn.TabIndex = 21;
+            this.SaveCfgBtn.Text = "Save Config";
+            this.SaveCfgBtn.UseVisualStyleBackColor = true;
+            this.SaveCfgBtn.Click += new System.EventHandler(this.SaveCfgBtn_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1249, 670);
+            this.Controls.Add(this.SaveCfgBtn);
+            this.Controls.Add(this.ExportCfgBtn);
+            this.Controls.Add(this.previewLabel);
             this.Controls.Add(this.loadingLabel);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.loadFolderBtn);
@@ -279,11 +308,14 @@
         private System.Windows.Forms.Label variationChanceLabel;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private OpenTK.GLControl glControl1;
-        private System.Windows.Forms.Timer tickTimer;
         private System.Windows.Forms.Button loadFolderBtn;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Label loadingLabel;
+        private System.Windows.Forms.Label previewLabel;
+        private System.Windows.Forms.Button ExportCfgBtn;
+        private System.Windows.Forms.Button SaveCfgBtn;
+        private System.Windows.Forms.SaveFileDialog saveFileDialog1;
     }
 }
 

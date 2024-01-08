@@ -49,7 +49,7 @@ namespace TextureReplacerGUI
             }
         }
 
-        public static async void LoadBundlesFolder(string folderPath, string managedFolderPath, EventHandler<OnFileLoaded_EventArgs> OnFileLoaded, Action OnLoadComplete)
+        public static async void LoadBundlesFolderAsync(string folderPath, string managedFolderPath, EventHandler<OnFileLoaded_EventArgs> OnFileLoaded, Action OnLoadComplete)
         {
             if (!Directory.Exists(folderPath))
             {
@@ -67,9 +67,7 @@ namespace TextureReplacerGUI
                     continue;
                 }
 
-                Console.WriteLine($"Progress at {filesRead / (float)files.Length * 100}%");
-
-                ClassIDMeshInfo info = await LoadBundleFile(file, managedFolderPath);
+                ClassIDMeshInfo info = await LoadBundleFileAsync(file, managedFolderPath);
                 if(string.IsNullOrEmpty(info.classID))
                 {
                     continue;
@@ -84,7 +82,46 @@ namespace TextureReplacerGUI
             OnLoadComplete?.Invoke();
         }
 
-        public static async Task<ClassIDMeshInfo> LoadBundleFile(string filePath, string managedFolderPath)
+        public static void LoadBundlesFolder(string folderPath, string managedFolderPath, EventHandler<OnFileLoaded_EventArgs> OnFileLoaded, Action OnLoadComplete)
+        {
+            if (!Directory.Exists(folderPath))
+            {
+                MessageBox.Show("Invalid folder path!");
+                return;
+            }
+
+            string[] files = Directory.GetFiles(folderPath, "*.bundle");
+            int filesRead = 0;
+            foreach (string file in files)
+            {
+                if (new FileInfo(file).Length == 0)
+                {
+                    filesRead++;
+                    continue;
+                }
+
+                Console.WriteLine($"Attempting to load file at {file}");
+                ClassIDMeshInfo info = LoadBundleFile(file, managedFolderPath);
+                if (string.IsNullOrEmpty(info.classID))
+                {
+                    Console.WriteLine($"Incorrect file contents. Aborting");
+                    filesRead++;
+                    continue;
+                }
+
+                Console.WriteLine($"File load complete");
+                Console.WriteLine($"Loading at {filesRead / (float)files.Length * 100}%");
+                meshInfos.Add(info.classID, info.mesh);
+                OnFileLoaded?.Invoke(null, new OnFileLoaded_EventArgs(filesRead / (float)files.Length));
+
+                filesRead++;
+            }
+
+            OnLoadComplete?.Invoke();
+            Console.WriteLine("Loading complete");
+        }
+
+        public static async Task<ClassIDMeshInfo> LoadBundleFileAsync(string filePath, string managedFolderPath)
         {
             var manager = new AssetsManager();
             manager.LoadClassPackage("C:\\VisualStudioProjects\\TextureReplacerGUI\\lz4.tpk");
@@ -111,6 +148,35 @@ namespace TextureReplacerGUI
                 return ClassIDMeshInfo.Empty;
             }
             
+            return new ClassIDMeshInfo(classID, mesh);
+        }
+        public static ClassIDMeshInfo LoadBundleFile(string filePath, string managedFolderPath)
+        {
+            var manager = new AssetsManager();
+            manager.LoadClassPackage("C:\\VisualStudioProjects\\TextureReplacerGUI\\lz4.tpk");
+            manager.MonoTempGenerator = new MonoCecilTempGenerator(managedFolderPath);
+
+            FileStream stream = new FileStream(filePath, FileMode.Open);
+            var bunInst = manager.LoadBundleFile(stream, true);
+            var aFileInst = manager.LoadAssetsFileFromBundle(bunInst, 0, false);
+            var aFile = aFileInst.file;
+
+            manager.LoadClassDatabaseFromPackage(aFile.Metadata.UnityVersion);
+
+            string classID = null;
+            bool hasClassID = TryGetClassID(aFileInst, manager, out classID);
+            if (!hasClassID)
+            {
+                return ClassIDMeshInfo.Empty;
+            }
+
+            MeshToOpenGL mesh = null;
+            bool hasMesh = TryGetMesh(aFileInst, manager, out mesh);
+            if (!hasMesh)
+            {
+                return ClassIDMeshInfo.Empty;
+            }
+
             return new ClassIDMeshInfo(classID, mesh);
         }
 
